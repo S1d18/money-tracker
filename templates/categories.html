@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Категории — BudgetSemi{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-tags"></i> Категории</h2>
+
+<div class="row g-4">
+    <!-- Расходные -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-arrow-down-circle text-danger"></i> Расходные</span>
+                <button class="btn btn-sm btn-outline-danger" onclick="showAddCategory('expense')">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
+            <ul class="list-group list-group-flush" id="expense-categories"></ul>
+        </div>
+    </div>
+    <!-- Доходные -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-arrow-up-circle text-success"></i> Доходные</span>
+                <button class="btn btn-sm btn-outline-success" onclick="showAddCategory('income')">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
+            <ul class="list-group list-group-flush" id="income-categories"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка категории -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cat-modal-title">Категория</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cat-id">
+                <input type="hidden" id="cat-type-val">
+                <div class="mb-3">
+                    <label class="form-label">Название</label>
+                    <input type="text" class="form-control" id="cat-name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Иконка (Bootstrap Icons)</label>
+                    <input type="text" class="form-control" id="cat-icon" placeholder="bi-cart">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Цвет</label>
+                    <input type="color" class="form-control form-control-color" id="cat-color" value="#6c757d">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Порядок сортировки</label>
+                    <input type="number" class="form-control" id="cat-sort" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="cat-save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let catModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+    catModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    loadCategories();
+    document.getElementById('cat-save').addEventListener('click', saveCategory);
+});
+
+function loadCategories() {
+    fetch('/api/categories')
+        .then(r => r.json())
+        .then(cats => {
+            const expEl = document.getElementById('expense-categories');
+            const incEl = document.getElementById('income-categories');
+            expEl.innerHTML = '';
+            incEl.innerHTML = '';
+            cats.forEach(c => {
+                if (!c.is_active) return;
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <span>
+                        <span class="badge rounded-pill" style="background:${c.color}">&nbsp;</span>
+                        <i class="${c.icon}"></i> ${c.name}
+                    </span>
+                    <span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editCategory(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </span>
+                `;
+                (c.type === 'expense' ? expEl : incEl).appendChild(li);
+            });
+        });
+}
+
+function showAddCategory(type) {
+    document.getElementById('cat-id').value = '';
+    document.getElementById('cat-type-val').value = type;
+    document.getElementById('cat-name').value = '';
+    document.getElementById('cat-icon').value = '';
+    document.getElementById('cat-color').value = '#6c757d';
+    document.getElementById('cat-sort').value = '0';
+    document.getElementById('cat-modal-title').textContent =
+        type === 'expense' ? 'Новая расходная категория' : 'Новая доходная категория';
+    catModal.show();
+}
+
+function editCategory(c) {
+    document.getElementById('cat-id').value = c.id;
+    document.getElementById('cat-type-val').value = c.type;
+    document.getElementById('cat-name').value = c.name;
+    document.getElementById('cat-icon').value = c.icon;
+    document.getElementById('cat-color').value = c.color;
+    document.getElementById('cat-sort').value = c.sort_order;
+    document.getElementById('cat-modal-title').textContent = 'Редактировать категорию';
+    catModal.show();
+}
+
+function saveCategory() {
+    const id = document.getElementById('cat-id').value;
+    const data = {
+        name: document.getElementById('cat-name').value,
+        type: document.getElementById('cat-type-val').value,
+        icon: document.getElementById('cat-icon').value,
+        color: document.getElementById('cat-color').value,
+        sort_order: parseInt(document.getElementById('cat-sort').value) || 0,
+    };
+    const url = id ? `/api/categories/${id}` : '/api/categories';
+    const method = id ? 'PUT' : 'POST';
+    fetch(url, {
+        method, headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+    }).then(() => { catModal.hide(); loadCategories(); });
+}
+
+function deleteCategory(id) {
+    if (!confirm('Удалить категорию?')) return;
+    fetch(`/api/categories/${id}`, {method: 'DELETE'})
+        .then(() => loadCategories());
+}
+</script>
+{% endblock %}

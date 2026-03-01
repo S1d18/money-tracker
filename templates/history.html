@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}История — BudgetSemi{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-clock-history"></i> История</h2>
+
+<!-- Таблица -->
+<div class="card mb-4">
+    <div class="card-header">Итоги по месяцам</div>
+    <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Месяц</th>
+                    <th class="text-end">Доход</th>
+                    <th class="text-end">Расход</th>
+                    <th class="text-end">Баланс</th>
+                    <th class="text-end">Накопления</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <tr><td colspan="5" class="text-center text-muted">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Сравнение двух месяцев -->
+<div class="card mb-4">
+    <div class="card-header">Сравнение месяцев</div>
+    <div class="card-body">
+        <div class="row g-2 mb-3">
+            <div class="col-md-5">
+                <select class="form-select" id="compare-a"></select>
+            </div>
+            <div class="col-md-2 text-center align-self-center fw-bold">vs</div>
+            <div class="col-md-5">
+                <select class="form-select" id="compare-b"></select>
+            </div>
+        </div>
+        <div class="row" id="compare-result" style="display:none;">
+            <div class="col-md-6">
+                <div class="card border-primary">
+                    <div class="card-header" id="comp-a-title"></div>
+                    <div class="card-body" id="comp-a-body"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-secondary">
+                    <div class="card-header" id="comp-b-title"></div>
+                    <div class="card-body" id="comp-b-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Тренды -->
+<div class="card">
+    <div class="card-header">Тренды (12 мес.)</div>
+    <div class="card-body">
+        <canvas id="chartTrends" height="300"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+const YEAR = {{ current_year }};
+const MONTH = {{ current_month }};
+let historyData = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+    loadTrends(YEAR, MONTH);
+});
+
+function loadHistory() {
+    fetch('/api/history')
+        .then(r => r.json())
+        .then(data => {
+            historyData = data;
+            const tbody = document.getElementById('history-body');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(m => `
+                <tr>
+                    <td>${m.month_name}</td>
+                    <td class="text-end text-success">${m.income_display}</td>
+                    <td class="text-end text-danger">${m.expense_display}</td>
+                    <td class="text-end ${m.balance >= 0 ? 'text-primary' : 'text-danger'}">${m.balance_display}</td>
+                    <td class="text-end">${m.savings_pct}%</td>
+                </tr>
+            `).join('');
+
+            // Заполнить селекты сравнения
+            const selA = document.getElementById('compare-a');
+            const selB = document.getElementById('compare-b');
+            selA.innerHTML = data.map((m, i) => `<option value="${i}">${m.month_name}</option>`).join('');
+            selB.innerHTML = data.map((m, i) => `<option value="${i}" ${i === 1 ? 'selected' : ''}>${m.month_name}</option>`).join('');
+            selA.addEventListener('change', compare);
+            selB.addEventListener('change', compare);
+            compare();
+        });
+}
+
+function compare() {
+    const a = historyData[document.getElementById('compare-a').value];
+    const b = historyData[document.getElementById('compare-b').value];
+    if (!a || !b) return;
+    document.getElementById('compare-result').style.display = '';
+    document.getElementById('comp-a-title').textContent = a.month_name;
+    document.getElementById('comp-b-title').textContent = b.month_name;
+
+    function renderBlock(m) {
+        return `
+            <div>Доход: <strong class="text-success">${m.income_display}</strong></div>
+            <div>Расход: <strong class="text-danger">${m.expense_display}</strong></div>
+            <div>Баланс: <strong class="${m.balance >= 0 ? 'text-primary' : 'text-danger'}">${m.balance_display}</strong></div>
+            <div>Накопления: <strong>${m.savings_pct}%</strong></div>
+        `;
+    }
+    document.getElementById('comp-a-body').innerHTML = renderBlock(a);
+    document.getElementById('comp-b-body').innerHTML = renderBlock(b);
+}
+</script>
+{% endblock %}

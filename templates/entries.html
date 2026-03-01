@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Записи — BudgetSemi{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-journal-text"></i> Записи — {{ month_name }} {{ year }}</h2>
+
+<!-- Регулярные платежи -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-arrow-repeat"></i> Регулярные платежи</span>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#recurringModal">
+            <i class="bi bi-plus"></i> Добавить
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0" id="recurring-table">
+            <thead>
+                <tr>
+                    <th style="width:50px"></th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th class="text-end">Дата</th>
+                    <th class="text-end">Сумма</th>
+                    <th style="width:100px"></th>
+                </tr>
+            </thead>
+            <tbody id="recurring-body">
+                <tr><td colspan="5" class="text-center text-muted">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Ручной ввод -->
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-pencil-square"></i> Добавить запись</div>
+    <div class="card-body">
+        <form id="entry-form">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Тип</label>
+                    <select class="form-select" id="entry-type" name="type">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                        <option value="refund">Возврат</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Сумма (₽)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="entry-amount" name="amount" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Категория</label>
+                    <select class="form-select" id="entry-category" name="category_id" required>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">День</label>
+                    <input type="number" min="1" max="31" class="form-control" id="entry-day" name="day">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Описание</label>
+                    <input type="text" class="form-control" id="entry-desc" name="description">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Добавить
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица записей -->
+<div class="card">
+    <div class="card-header">Записи за {{ month_name }} {{ year }}</div>
+    <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>День</th>
+                    <th>Тип</th>
+                    <th>Категория</th>
+                    <th class="text-end">Сумма</th>
+                    <th>Описание</th>
+                    <th style="width:120px"></th>
+                </tr>
+            </thead>
+            <tbody id="entries-body">
+                <tr><td colspan="6" class="text-center text-muted">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Модалка для нового регулярного -->
+<div class="modal fade" id="recurringModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новый регулярный платёж</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="recurring-form">
+                    <div class="mb-3">
+                        <label class="form-label">Название</label>
+                        <input type="text" class="form-control" id="rec-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Тип</label>
+                        <select class="form-select" id="rec-type">
+                            <option value="expense">Расход</option>
+                            <option value="income">Доход</option>
+                            <option value="refund">Возврат</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        <select class="form-select" id="rec-category" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Сумма (₽)</label>
+                        <input type="number" step="0.01" min="0.01" class="form-control" id="rec-amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">День списания (1-31)</label>
+                        <input type="number" min="1" max="31" class="form-control" id="rec-due-day" placeholder="Например: 15">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="rec-save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка редактирования записи -->
+<div class="modal fade" id="editEntryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактировать запись</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-entry-form">
+                    <input type="hidden" id="edit-entry-id">
+                    <div class="mb-3">
+                        <label class="form-label">Тип</label>
+                        <select class="form-select" id="edit-entry-type">
+                            <option value="expense">Расход</option>
+                            <option value="income">Доход</option>
+                            <option value="refund">Возврат</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Сумма (₽)</label>
+                        <input type="number" step="0.01" min="0.01" class="form-control" id="edit-entry-amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        <select class="form-select" id="edit-entry-category" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">День</label>
+                        <input type="number" min="1" max="31" class="form-control" id="edit-entry-day">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <input type="text" class="form-control" id="edit-entry-desc">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="edit-entry-save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const YEAR = {{ year }};
+    const MONTH = {{ month }};
+    const ALL_CATEGORIES = {{ categories | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/entries.js') }}"></script>
+<script src="{{ url_for('static', filename='js/recurring.js') }}"></script>
+{% endblock %}

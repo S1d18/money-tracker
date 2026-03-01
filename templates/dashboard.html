@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Дашборд — BudgetSemi{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-speedometer2"></i> Дашборд — {{ month_name }} {{ year }}</h2>
+
+<!-- Общий баланс (как в банке) -->
+<div class="card mb-4 border-dark">
+    <div class="card-body text-center py-4">
+        <div class="text-muted">Общий баланс (за всё время)</div>
+        <div class="fs-2 fw-bold" id="card-total-balance">—</div>
+    </div>
+</div>
+
+<!-- Карточки текущего месяца -->
+<div class="row g-3 mb-4" id="summary-cards">
+    <div class="col-md-3 col-6">
+        <div class="card summary-card border-success">
+            <div class="card-body text-center">
+                <div class="text-muted small">Доход за месяц</div>
+                <div class="fs-4 fw-bold text-success" id="card-income">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card summary-card border-danger">
+            <div class="card-body text-center">
+                <div class="text-muted small">Расход за месяц</div>
+                <div class="fs-4 fw-bold text-danger" id="card-expense">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card summary-card border-primary">
+            <div class="card-body text-center">
+                <div class="text-muted small">Баланс за месяц</div>
+                <div class="fs-4 fw-bold text-primary" id="card-balance">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card summary-card border-info">
+            <div class="card-body text-center">
+                <div class="text-muted small">Накопления</div>
+                <div class="fs-4 fw-bold text-info" id="card-savings">—</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Неоплаченные регулярные платежи -->
+<div class="card mb-4 border-warning" id="pending-recurring-card" style="display:none;">
+    <div class="card-header bg-warning bg-opacity-25">
+        <i class="bi bi-exclamation-triangle"></i> Не забудьте оплатить
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Платёж</th>
+                    <th>Категория</th>
+                    <th class="text-end">Дата</th>
+                    <th class="text-end">Сумма</th>
+                </tr>
+            </thead>
+            <tbody id="pending-recurring-body"></tbody>
+            <tfoot>
+                <tr class="table-warning">
+                    <td colspan="3" class="fw-bold">Итого к оплате</td>
+                    <td class="text-end fw-bold" id="pending-recurring-total"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="card-footer text-center">
+        <a href="/entries?year={{ year }}&month={{ month }}" class="btn btn-warning btn-sm">
+            <i class="bi bi-check2-square"></i> Перейти к подтверждению
+        </a>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Расходы по категориям (факт + план)</div>
+            <div class="card-body">
+                <canvas id="chartPie" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Доходы vs Расходы (6 мес.)</div>
+            <div class="card-body">
+                <canvas id="chartBar" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Топ-5 -->
+<div class="card">
+    <div class="card-header">Топ-5 категорий расходов</div>
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr><th>#</th><th>Категория</th><th class="text-end">Сумма</th></tr>
+            </thead>
+            <tbody id="top5-body">
+                <tr><td colspan="3" class="text-center text-muted">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    const YEAR = {{ year }};
+    const MONTH = {{ month }};
+    document.addEventListener('DOMContentLoaded', () => loadDashboard(YEAR, MONTH));
+</script>
+{% endblock %}

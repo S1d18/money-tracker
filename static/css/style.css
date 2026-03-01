@@ -1,0 +1,173 @@
+/* BudgetSemi — основные стили */
+
+/* ── Светлая тема (по умолчанию) ── */
+[data-bs-theme="light"] body {
+    background-color: #f5f6fa;
+}
+
+[data-bs-theme="light"] .navbar {
+    background-color: #212529 !important;
+}
+
+[data-bs-theme="light"] .recurring-confirmed td {
+    background-color: #e8f5e9 !important;
+}
+
+/* ── Тёмная тема ── */
+[data-bs-theme="dark"] body {
+    background-color: #1a1d21;
+}
+
+[data-bs-theme="dark"] .navbar {
+    background-color: #111315 !important;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #212529;
+    border-color: #343a40;
+}
+
+[data-bs-theme="dark"] .card-header {
+    background-color: #2b3035;
+    border-color: #343a40;
+}
+
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: #2b3035;
+    --bs-table-hover-bg: #323539;
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .table th {
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .recurring-confirmed td {
+    background-color: #1b3a1b !important;
+}
+
+[data-bs-theme="dark"] .table-warning {
+    --bs-table-bg: #332b00 !important;
+    color: #ffc107 !important;
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    background-color: #212529;
+    border-color: #343a40;
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .modal-content {
+    background-color: #212529;
+    border-color: #343a40;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: #343a40;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #2b3035;
+    border-color: #495057;
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .alert-warning {
+    background-color: #332b00;
+    border-color: #664d00;
+    color: #ffc107;
+}
+
+[data-bs-theme="dark"] .alert-info {
+    background-color: #032830;
+    border-color: #055160;
+    color: #6edff6;
+}
+
+[data-bs-theme="dark"] .alert-success {
+    background-color: #0d2e1c;
+    border-color: #0f5132;
+    color: #75b798;
+}
+
+[data-bs-theme="dark"] .alert-secondary {
+    background-color: #2b3035;
+    border-color: #495057;
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .bg-warning.bg-opacity-25 {
+    background-color: rgba(255, 193, 7, 0.15) !important;
+}
+
+/* ── Общие стили ── */
+.navbar-brand {
+    font-weight: 700;
+}
+
+.summary-card {
+    border-width: 2px;
+    transition: transform 0.15s;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+/* Чекбоксы рекуррентных */
+.recurring-check {
+    width: 1.3em;
+    height: 1.3em;
+    cursor: pointer;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .summary-card .fs-4 {
+        font-size: 1rem !important;
+    }
+
+    .summary-card .fs-2 {
+        font-size: 1.3rem !important;
+    }
+
+    .table {
+        font-size: 0.85rem;
+    }
+
+    .navbar .d-flex {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Алерты рекомендаций */
+.alert i.fs-4 {
+    min-width: 30px;
+}
+
+/* Плавный переход темы */
+body,
+.card,
+.card-header,
+.table,
+.modal-content,
+.list-group-item,
+.form-control,
+.form-select,
+.alert {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

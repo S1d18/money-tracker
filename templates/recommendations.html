@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Рекомендации — BudgetSemi{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-lightbulb"></i> Рекомендации — {{ month_name }} {{ year }}</h2>
+
+<div id="recs-container">
+    <div class="text-center text-muted py-5">Загрузка...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const YEAR = {{ year }};
+const MONTH = {{ month }};
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetch(`/api/recommendations?year=${YEAR}&month=${MONTH}`)
+        .then(r => r.json())
+        .then(recs => {
+            const container = document.getElementById('recs-container');
+            if (!recs.length) {
+                container.innerHTML = '<div class="alert alert-secondary">Недостаточно данных для анализа. Добавьте записи о доходах и расходах.</div>';
+                return;
+            }
+            const typeMap = {
+                'warning': {cls: 'alert-warning', icon: 'bi-exclamation-triangle'},
+                'info':    {cls: 'alert-info', icon: 'bi-info-circle'},
+                'success': {cls: 'alert-success', icon: 'bi-check-circle'},
+            };
+            container.innerHTML = recs.map(r => {
+                const t = typeMap[r.type] || typeMap.info;
+                return `
+                    <div class="alert ${t.cls} d-flex align-items-start">
+                        <i class="bi ${t.icon} fs-4 me-3 mt-1"></i>
+                        <div>
+                            <strong>${r.title}</strong><br>
+                            ${r.text}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        });
+});
+</script>
+{% endblock %}
